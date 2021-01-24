@@ -1,4 +1,4 @@
-# CG Projeto SistemaSolar LEI 2020
+# CG Projeto Sistema Solar LEI 2020
 
 PUBLIC
 
