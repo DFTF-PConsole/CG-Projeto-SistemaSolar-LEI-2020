@@ -1,0 +1,58 @@
+
+// Projeto Meta 3 - Fragment Shader ||| CG - LEI / FCTUC 2020/21 | Dario Filipe Torres Felix N.2018275530
+
+int TIPO_PHONG = 1;
+int TIPO_GOURAD = 2;
+uniform int tipo;
+
+uniform float xLuz;
+uniform float yLuz;
+uniform float zLuz;
+
+uniform float xObs;
+uniform float yObs;
+uniform float zObs;
+
+varying vec3  vNormal;
+varying vec3  posicao;
+
+float material_generico_ambiente = 0.25;
+float material_generico_difusa = 0.4;
+float material_generico_especular = 0.774597;
+float material_generico_brilho = 76.8/128.0;
+
+float intensidade_luz_ambiente = 0.2;
+float intensidade_luz_difusa = 0.8;
+float intensidade_luz_especular = 1.0;
+
+
+void main(void) {
+   
+   if (tipo == TIPO_PHONG) {
+        vec3 nNormal= normalize(vNormal);
+        vec3 direcao_luz = normalize((gl_ModelViewMatrix * vec4(xLuz, yLuz, zLuz, 1)) - posicao);
+
+        vec3 direcao_obs = normalize(- posicao);
+        vec3 direcao_reflexao = normalize(reflect(-direcao_luz, nNormal));
+        
+        vec3 ambiente = vec3(1.0,1.0,1.0) * intensidade_luz_ambiente * material_generico_ambiente;
+
+        float intensidade_difusa = max(dot(nNormal, direcao_luz), 0.0);
+        vec3 difusa = vec3(1.0,1.0,1.0) * intensidade_luz_difusa * material_generico_difusa * intensidade_difusa;
+
+        float intensidade_especular = max(dot(direcao_reflexao, direcao_obs), 0.0);
+        intensidade_especular = max(dot(direcao_luz, nNormal), 0.0) == 0.0 ? 0.0 : intensidade_especular;
+        vec3 especular = vec3(1.0,1.0,1.0) * intensidade_luz_especular * material_generico_especular * pow(intensidade_especular, material_generico_brilho);
+
+        gl_FragColor = vec4(ambiente + difusa + especular, 1) * gl_Color;
+
+    } else {
+        if (tipo == TIPO_GOURAD) {
+            gl_FragColor = gl_Color;
+        } else { // TIPO_ESTATICO = 3
+            gl_FragColor = gl_Color;
+        }
+    }
+
+}
+

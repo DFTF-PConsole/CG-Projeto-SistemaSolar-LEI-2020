@@ -1,0 +1,125 @@
+
+// Projeto Meta 3 - Vertex Shader ||| CG - LEI / FCTUC 2020/21 | Dario Filipe Torres Felix N.2018275530
+
+int TIPO_PHONG = 1;
+int TIPO_GOURAD = 2;
+uniform int tipo;
+
+uniform float tempo;
+
+uniform float xLuz;
+uniform float yLuz;
+uniform float zLuz;
+
+uniform float xObs;
+uniform float yObs;
+uniform float zObs;
+
+varying vec3  vNormal;
+varying vec3  posicao;
+
+float material_generico_ambiente = 0.25;
+float material_generico_difusa = 0.4;
+float material_generico_especular = 0.774597;
+float material_generico_brilho = 76.8/128.0;
+
+float intensidade_luz_ambiente = 0.2;
+float intensidade_luz_difusa = 0.8;
+float intensidade_luz_especular = 1.0;
+
+uniform float velocidade;
+float inc_fator = (360.0/(60*30.0))*velocidade; // Em graus: Volta completa em 1 min
+float inc_mercurio = inc_fator * 1.607;
+float inc_venus = inc_fator * 1.174;
+float inc_terra = inc_fator * 1.0; // velocidades relativas a Terra
+float inc_marte = inc_fator * 0.802;
+float inc_jupiter = inc_fator * 0.434;
+float inc_saturno = inc_fator * 0.323;
+float inc_urano = inc_fator * 0.228;
+float inc_neptuno = inc_fator * 0.182;
+
+uniform float d_mercurio;
+uniform float d_venus;
+uniform float d_terra;
+uniform float d_marte;
+uniform float d_jupiter;
+uniform float d_saturno;
+uniform float d_urano;
+uniform float d_neptuno;
+
+uniform float n_planeta;
+
+void main(void) {
+    
+    float aCalc;
+	float xCalc;
+	float zCalc;
+
+    if (n_planeta == 1) {
+        aCalc = inc_mercurio * tempo;
+	    xCalc = d_mercurio * cos(aCalc);
+	    zCalc = d_mercurio * sin(aCalc);
+    } else if (n_planeta == 2) {
+        aCalc = inc_venus * tempo;
+	    xCalc = d_venus * cos(aCalc);
+	    zCalc = d_venus * sin(aCalc);
+    } else if (n_planeta == 3) {
+        aCalc = inc_terra * tempo;
+	    xCalc = d_terra * cos(aCalc);
+	    zCalc = d_terra * sin(aCalc);
+    } else if (n_planeta == 4) {
+        aCalc = inc_marte * tempo;
+	    xCalc = d_marte  * cos(aCalc);
+	    zCalc = d_marte  * sin(aCalc);
+    } else if (n_planeta == 5) {
+        aCalc = inc_jupiter * tempo;
+	    xCalc = d_jupiter * cos(aCalc);
+	    zCalc = d_jupiter * sin(aCalc);
+    } else if (n_planeta == 6) {
+        aCalc = inc_saturno * tempo;
+	    xCalc = d_saturno * cos(aCalc);
+	    zCalc = d_saturno * sin(aCalc);
+    } else if (n_planeta == 7) {
+        aCalc = inc_urano * tempo;
+	    xCalc = d_urano * cos(aCalc);
+	    zCalc = d_urano * sin(aCalc);
+    } else if (n_planeta == 8) {
+        aCalc = inc_neptuno * tempo;
+	    xCalc = d_neptuno * cos(aCalc);
+	    zCalc = d_neptuno * sin(aCalc);
+    }
+
+    if (tipo == TIPO_PHONG) {
+        vec4 nova_posicao = gl_Vertex + vec4(xCalc, 0, zCalc, 0);
+        gl_FrontColor = gl_Color;
+        gl_Position = gl_ModelViewProjectionMatrix * nova_posicao;
+        vNormal = normalize(gl_NormalMatrix * gl_Normal); 
+        posicao = gl_ModelViewMatrix * nova_posicao;
+    } else {
+        if (tipo == TIPO_GOURAD) {
+            vec4 nova_posicao = gl_Vertex + vec4(xCalc, 0, zCalc, 0);
+            vec3 nNormal = normalize(gl_NormalMatrix * gl_Normal);
+            vec3 direcao_luz = normalize((gl_ModelViewMatrix * vec4(xLuz, yLuz, zLuz, 1)) - (gl_ModelViewMatrix * nova_posicao));
+
+            vec3 direcao_obs = normalize(- (gl_ModelViewMatrix * nova_posicao));
+            vec3 direcao_reflexao = normalize(reflect(-direcao_luz, nNormal));
+        
+            vec3 ambiente = vec3(1.0,1.0,1.0) * intensidade_luz_ambiente * material_generico_ambiente;
+
+            float intensidade_difusa = max(dot(nNormal, direcao_luz), 0.0);
+            vec3 difusa = vec3(1.0,1.0,1.0) * intensidade_luz_difusa * material_generico_difusa * intensidade_difusa;
+
+            float intensidade_especular = max(dot(direcao_reflexao, direcao_obs), 0.0);
+            intensidade_especular = max(dot(direcao_luz, nNormal), 0.0) == 0.0 ? 0.0 : intensidade_especular;
+            vec3 especular = vec3(1.0,1.0,1.0) * intensidade_luz_especular * material_generico_especular * pow(intensidade_especular, material_generico_brilho);
+
+            gl_FrontColor = vec4(ambiente + difusa + especular, 1) * gl_Color;
+            gl_Position = gl_ModelViewProjectionMatrix * nova_posicao;
+
+        } else { // TIPO_ESTATICO = 3
+            gl_FrontColor = gl_Color;
+            gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+        }
+    }
+    
+}
